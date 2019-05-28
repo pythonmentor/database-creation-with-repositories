@@ -1,6 +1,5 @@
 from zmodels import Repository
 
-
 class StoreRepository(Repository):
 
     def create_table(self):
