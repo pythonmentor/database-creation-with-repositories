@@ -1,15 +1,18 @@
 from .database import db
-from .exceptions import NotFoundError, NotUniqueError, AlreadyInDatabaseError
+from .exceptions import NotFoundError, NotUniqueError
 
-class Manager:
+
+class Repository:
 
     def __init__(self, model):
+        """Initializes the repository."""
         self.db = db
         self.model = model
         self.create_table()
 
     @property
     def last_id(self):
+        """Returns the last auto-incremented id."""
         rows = self.db.query("""
             SELECT LAST_INSERT_ID() AS id
         """)
@@ -18,9 +21,10 @@ class Manager:
             return row['id']
 
     def filter(self, **search_terms):
+        """Searches objects in the database matching the provided criteria."""
         conditions = " AND ".join(
-            f"{term} = :{term}" 
-            for term, value in search_terms.items() 
+            f"{term} = :{term}"
+            for term, value in search_terms.items()
             if value is not None
         ).strip()
 
@@ -33,11 +37,12 @@ class Manager:
         """, **search_terms).all(as_dict=True)
 
         return [
-            self.model(**instance) 
+            self.model(**instance)
             for instance in instances
         ]
 
     def get(self, **search_terms):
+        """Gets one object from the database matching the provided criteria."""
         instances = self.filter(**search_terms)
 
         if not instances:
@@ -49,6 +54,9 @@ class Manager:
         return instances[0]
 
     def get_or_create(self, **search_terms):
+        """Gets one object from the database matching the provided criteria or
+        creates it if it does not exist.
+        """
         try:
             instance = self.get(**search_terms)
         except NotFoundError:
@@ -56,38 +64,43 @@ class Manager:
         return instance
 
     def all(self):
+        """Returns all the objects of the current type in the database."""
         return self.filter()
 
     def create(self, **attributes):
+        """Create a new instance of the model and saves it in the database."""
         return self.save(self.model(**attributes))
 
     def create_table(self):
+        """Creates the necessary tables for the current model to work."""
         pass
 
     def save(self, instance):
+        """Saves or updates the current model instance in the database."""
         return instance
 
 
-class StoreManager(Manager):
+class StoreRepository(Repository):
 
     table = 'store'
 
     def create_table(self):
-        self.db.query("""
-            CREATE TABLE IF NOT EXISTS store (
+        self.db.query(f"""
+            CREATE TABLE IF NOT EXISTS {self.table} (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(255) UNIQUE NOT NULL
             )
         """)
 
     def save(self, store):
-        self.db.query("""
-            INSERT INTO store (id, name)
+        self.db.query(f"""
+            INSERT INTO {self.table} (id, name)
             VALUES (:id, :name)
             ON DUPLICATE KEY UPDATE  name = :name
         """, **vars(store))
 
-        store.id = self.get(name=store.name).id
+        if not store.id:
+            store.id = self.get(name=store.name).id
         return store
 
     def add_product(self, store, product):
@@ -106,13 +119,13 @@ class StoreManager(Manager):
         return [self.model(**store) for store in stores]
 
 
-class ProductManager(Manager):
+class ProductRepository(Repository):
 
     table = 'product'
 
     def create_table(self):
-        self.db.query("""
-            CREATE TABLE IF NOT EXISTS product (
+        self.db.query(f"""
+            CREATE TABLE IF NOT EXISTS {self.table} (
                 id BIGINT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL
             )
@@ -127,8 +140,8 @@ class ProductManager(Manager):
         """)
 
     def save(self, product):
-        self.db.query("""
-            INSERT INTO product (id, name)
+        self.db.query(f"""
+            INSERT INTO {self.table} (id, name)
             VALUES (:id, :name)
             ON DUPLICATE KEY UPDATE  name = :name
         """, **vars(product))

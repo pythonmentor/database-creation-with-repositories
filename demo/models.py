@@ -1,22 +1,25 @@
-from . import managers
+from . import repositories
 
 
 class Model:
 
     def save(self):
+        """Saves the model in the database."""
         self.objects.save(self)
 
     def __repr__(self):
+        """Formats a string representing the model."""
         attributes = ", ".join(
-            f"{key}={value}" 
+            f"{key}={value}"
             for key, value in vars(self).items()
         )
-        return f"{type(self).__name__}(id={self.id}, name={self.name})"
+        return f"{type(self).__name__}({attributes})"
 
 
 class Store(Model):
 
     def __init__(self, name, id=None, **kwargs):
+        """Initializes the model."""
         self.id = id
         self.name = name
 
@@ -26,12 +29,13 @@ class Store(Model):
         return Product.objects.get_all_by_store(self)
 
 
-Store.objects = managers.StoreManager(Store)
+Store.objects = repositories.StoreRepository(Store)
 
 
 class Product(Model):
 
     def __init__(self, id, name, **kwargs):
+        """Initializes the model."""
         self.id = id
         self.name = name
 
@@ -47,7 +51,7 @@ class Product(Model):
             raise TypeError("stores must be a non-blank field")
 
         product = cls.objects.get_or_create(
-            id=code, 
+            id=code,
             name=product_name.lower().strip()
         )
         for store in stores.split(','):
@@ -58,9 +62,4 @@ class Product(Model):
         return product
 
 
-Product.objects = managers.ProductManager(Product)
-
-
-
-
-    
+Product.objects = repositories.ProductRepository(Product)
