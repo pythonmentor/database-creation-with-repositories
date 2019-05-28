@@ -27,7 +27,7 @@ def main():
     
     for product in products:
         try:
-            product = Product.objects.create_from_openfoodfacts(**product)
+            product = Product.create_from_openfoodfacts(**product)
         except TypeError:
             continue
 
