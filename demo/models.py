@@ -1,19 +1,6 @@
+from zmodels import Model
+
 from . import repositories
-
-
-class Model:
-
-    def save(self):
-        """Saves the model in the database."""
-        self.objects.save(self)
-
-    def __repr__(self):
-        """Formats a string representing the model."""
-        attributes = ", ".join(
-            f"{key}={value}"
-            for key, value in vars(self).items()
-        )
-        return f"{type(self).__name__}({attributes})"
 
 
 class Store(Model):
