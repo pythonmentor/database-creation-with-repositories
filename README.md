@@ -26,6 +26,7 @@ suivant:
 ```
 DATABASE_URL = mysql+mysqlconnector://user:password@host:port/dbname?charset=charset
 ```
+Si vous utilisez pipenv, vous pouvez définir la variable d'environnement en créant un fichier appelé .env et contenant la définition ci-dessus. Ce fichier .env doit être placé à la racine du projet, au même niveau que le fichier Pipfile.
 
 L'exemple s'exécute ensuite avec la commande:
 
